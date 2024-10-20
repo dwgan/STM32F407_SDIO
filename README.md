@@ -15,15 +15,15 @@
 2、配置调试器
 ![在这里插入图片描述](https://i-blog.csdnimg.cn/direct/403f762cb4df4dbca921acb03616584f.png)
 3、配置SDIO，注意这里要配置DMA和SDIO全局中断，其它默认
-![在这里插入图片描述](https://dwgan.top/PicGo/img/202410210102121.png)
+![在这里插入图片描述](https://dwgan.top/PicGo/img/202410210121903.png)
 
-![在这里插入图片描述](https://i-blog.csdnimg.cn/direct/62a4b7a6bab74f3694237511ea3b0dbe.png)
+![在这里插入图片描述](https://dwgan.top/PicGo/img/202410210121120.png)
 4、添加一个串口用于调试
-![在这里插入图片描述](https://dwgan.top/PicGo/img/202410210102106.png)
+![在这里插入图片描述](https://dwgan.top/PicGo/img/202410210121909.png)
 5、配置时钟树
 ![在这里插入图片描述](https://i-blog.csdnimg.cn/direct/c06c3dc7ad5047e8a29e450c04b5d51b.png)
 6、生成代码
-![在这里插入图片描述](https://i-blog.csdnimg.cn/direct/ffd4062cdfb04364a04466fdb6e58a69.png)
+![在这里插入图片描述](https://dwgan.top/PicGo/img/202410210121403.png)
 ![在这里插入图片描述](https://i-blog.csdnimg.cn/direct/f2c41de7bdef4cd79894938262b2a523.png)
 ## 修改代码
 1、重定向printf函数输出到串口，用于调试
@@ -82,11 +82,11 @@ int main(void)
 }
 ```
 3、编译下载发现无法输出预期，于是开始了Debug，发现跳转到了Error_Handler
-![在这里插入图片描述](https://dwgan.top/PicGo/img/202410210102921.png)
+![在这里插入图片描述](https://dwgan.top/PicGo/img/202410210121499.png)
 4、打开Call Stack，发现错误在MX_SDIO_SD_Init();这个函数
 ![在这里插入图片描述](https://i-blog.csdnimg.cn/direct/ddde6e2ed59a41caa8af2f1c445b37f7.png)
 5、于是继续跟踪，发现这里出错了，查找资料后发现这里生成的代码是有问题的（ST官方代码的第一个大坑）
-![在这里插入图片描述](https://dwgan.top/PicGo/img/202410210102665.png)
+![在这里插入图片描述](https://i-blog.csdnimg.cn/direct/af76662ebe744b43b8571162bfebef5f.png)
 6、将代码改为如下后重新运行
 ```c
 void MX_SDIO_SD_Init(void)
@@ -121,7 +121,16 @@ void MX_SDIO_SD_Init(void)
 }
 ```
 可以看到输出，说明初始化通过
-![在这里插入图片描述](https://dwgan.top/PicGo/img/202410210102379.png)
+![在这里插入图片描述](https://dwgan.top/PicGo/img/202410210121346.png)
+7、使用DMA读写SD卡，这里提一点，由于DMA和SDIO模块是分开的，因此当DMA写入完成之后，SDIO的总线可能还处于正忙状态，此时若强行写入SDIO只能导致失败。如果手动添加延时可以一定程度改善，但是无法完全解决这个问题。使用逻辑分析仪调试之后发现只有当SDIO_CMD和SDIO_D0都空闲（高电平）的时候，调用DMA写入才不会失败，因此有了如下的补丁代码。
+
+```c
+    // 将数据通过DMA写入
+    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == 1 && HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12) == 1) // 补丁，只有当SDIO总线空闲的时候才能够发起写入，否则出错
+    {
+        HAL_SD_WriteBlocks_DMA(&hsd, buff_w, 0, DMA_NUM_BLOCKS_TO_WRITE);
+    }
+```
 
 ## 测试SD卡读写
 
@@ -257,14 +266,20 @@ int main(void)
     // 写入SD卡
     printf("正在写入数据\n");
     // 将数据通过DMA写入
-    HAL_SD_WriteBlocks_DMA(&hsd, buff_w, 0, DMA_NUM_BLOCKS_TO_WRITE);
+    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == 1 && HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12) == 1) // 补丁，只有当SDIO总线空闲的时候才能够发起写入，否则出错
+    {
+        HAL_SD_WriteBlocks_DMA(&hsd, buff_w, 0, DMA_NUM_BLOCKS_TO_WRITE);
+    }
     while (sdio_write_done == 0);
     printf("数据写入完成\n");
     
     // 读取SD卡数据并且通过串口输出
     printf("正在读取数据\n");
     // 将数据读出到buff_r中
-    HAL_SD_ReadBlocks_DMA(&hsd, buff_r, 0, DMA_NUM_BLOCKS_TO_READ);
+    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == 1 && HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12) == 1)
+    {
+        HAL_SD_ReadBlocks_DMA(&hsd, buff_r, 0, DMA_NUM_BLOCKS_TO_READ);
+    }
     while (sdio_read_done == 0);
     if (0 == memcmp(buff_w, buff_r, sizeof(buff_r)))
     {
@@ -383,3 +398,7 @@ void assert_failed(uint8_t *file, uint32_t line)
 ST官方的代码有两大坑：
 1、SDIO初始化的坑，必须要使用1bit总线的SDIO来初始化SD卡，否则会导致初始化失败
 2、采用轮询方式或者中断方式读写SDIO有问题，这里建议采用DMA进行读写
+3、使用DMA读写SD卡的时候需要实现检查当前SDIO是空闲的，否则会出错
+
+# 代码
+> https://github.com/dwgan/STM32F407_SDIO

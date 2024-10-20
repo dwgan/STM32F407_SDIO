@@ -129,14 +129,20 @@ int main(void)
     // 写入SD卡
     printf("正在写入数据\n");
     // 将数据通过DMA写入
-    HAL_SD_WriteBlocks_DMA(&hsd, buff_w, 0, DMA_NUM_BLOCKS_TO_WRITE);
+    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == 1 && HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12) == 1) // 补丁，只有当SDIO总线空闲的时候才能够发起写入，否则出错
+    {
+        HAL_SD_WriteBlocks_DMA(&hsd, buff_w, 0, DMA_NUM_BLOCKS_TO_WRITE);
+    }
     while (sdio_write_done == 0);
     printf("数据写入完成\n");
     
     // 读取SD卡数据并且通过串口输出
     printf("正在读取数据\n");
     // 将数据读出到buff_r中
-    HAL_SD_ReadBlocks_DMA(&hsd, buff_r, 0, DMA_NUM_BLOCKS_TO_READ);
+    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == 1 && HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12) == 1)
+    {
+        HAL_SD_ReadBlocks_DMA(&hsd, buff_r, 0, DMA_NUM_BLOCKS_TO_READ);
+    }
     while (sdio_read_done == 0);
     if (0 == memcmp(buff_w, buff_r, sizeof(buff_r)))
     {
