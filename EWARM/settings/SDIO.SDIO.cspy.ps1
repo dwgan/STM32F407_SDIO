@@ -23,9 +23,9 @@
 
 if ($debugfile -eq "")
 {
-& "C:\Program Files\IAR Systems\Embedded Workbench 9.2\common\bin\cspybat" -f "C:\Work\FATFS\EWARM\settings\SDIO.SDIO.general.xcl" --backend -f "C:\Work\FATFS\EWARM\settings\SDIO.SDIO.driver.xcl" 
+& "C:\Program Files\IAR Systems\Embedded Workbench 9.2\common\bin\cspybat" -f "C:\Work\STM32F407_SDIO\EWARM\settings\SDIO.SDIO.general.xcl" --backend -f "C:\Work\STM32F407_SDIO\EWARM\settings\SDIO.SDIO.driver.xcl" 
 }
 else
 {
-& "C:\Program Files\IAR Systems\Embedded Workbench 9.2\common\bin\cspybat" -f "C:\Work\FATFS\EWARM\settings\SDIO.SDIO.general.xcl" --debug_file=$debugfile --backend -f "C:\Work\FATFS\EWARM\settings\SDIO.SDIO.driver.xcl" 
+& "C:\Program Files\IAR Systems\Embedded Workbench 9.2\common\bin\cspybat" -f "C:\Work\STM32F407_SDIO\EWARM\settings\SDIO.SDIO.general.xcl" --debug_file=$debugfile --backend -f "C:\Work\STM32F407_SDIO\EWARM\settings\SDIO.SDIO.driver.xcl" 
 }

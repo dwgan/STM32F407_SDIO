@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 9.2\common\bin\cspybat" -f "C:\Work\FATFS\EWARM\settings\SDIO.SDIO.general.xcl" --backend -f "C:\Work\FATFS\EWARM\settings\SDIO.SDIO.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 9.2\common\bin\cspybat" -f "C:\Work\STM32F407_SDIO\EWARM\settings\SDIO.SDIO.general.xcl" --backend -f "C:\Work\STM32F407_SDIO\EWARM\settings\SDIO.SDIO.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 9.2\common\bin\cspybat" -f "C:\Work\FATFS\EWARM\settings\SDIO.SDIO.general.xcl" "--debug_file=%~1" --backend -f "C:\Work\FATFS\EWARM\settings\SDIO.SDIO.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 9.2\common\bin\cspybat" -f "C:\Work\STM32F407_SDIO\EWARM\settings\SDIO.SDIO.general.xcl" "--debug_file=%~1" --backend -f "C:\Work\STM32F407_SDIO\EWARM\settings\SDIO.SDIO.driver.xcl" 
 
 @echo off 
 :end

@@ -2,7 +2,7 @@
 
 "C:\Program Files\IAR Systems\Embedded Workbench 9.2\arm\bin\armSTLINK.dll" 
 
-"C:\Work\FATFS\EWARM\SDIO\Exe\SDIO.out" 
+"C:\Work\STM32F407_SDIO\EWARM\SDIO\Exe\SDIO.out" 
 
 --plugin="C:\Program Files\IAR Systems\Embedded Workbench 9.2\arm\bin\armLibSupportUniversal.dll" 
 

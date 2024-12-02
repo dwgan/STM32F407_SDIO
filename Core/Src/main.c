@@ -55,7 +55,6 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-extern struct netif gnetif;  // 你的以太网接口结构体
 FIL MyFile;       /* 文件对象 */
 char data[] = "Hello, this is a test data.\r\n";
 BYTE work[4096] __attribute__((aligned(4096)));  // 强制对齐
